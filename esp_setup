@@ -1,0 +1,20 @@
+#include <ESP8266WiFi.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#include <WiFiClientSecure.h> 
+
+
+const char* ssid = "NETGEAR54";         
+const char* password = "largeskates598"; 
+
+
+void setup() {
+    Serial.begin(9600);
+
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("Connected to Wi-Fi");
+}
