@@ -6,7 +6,7 @@
 
 #define DHTPIN 2        
 #define DHTTYPE DHT11   
-#define BUTTON_PIN 16   
+#define BUTTON_PIN 9   
 
 DHT myDHT(DHTPIN, DHTTYPE);
 
