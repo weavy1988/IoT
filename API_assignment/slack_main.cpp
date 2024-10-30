@@ -10,8 +10,8 @@
 
 DHT myDHT(DHTPIN, DHTTYPE);
 
-const char* ssid = "NETGEAR54";         
-const char* password = "largeskates598"; 
+const char* ssid = "iPhone";         
+const char* password = "mt3nqms6q1hx"; 
 
 const char* iftttWebhookUrl = "/trigger/button_pressed/json/with/key/bE10pbsmig1dADG8h_RypE";
 const char* iftttHost = "maker.ifttt.com";
