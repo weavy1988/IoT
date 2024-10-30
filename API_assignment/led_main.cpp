@@ -1,17 +1,17 @@
-#include <ESP8266WiFi.h> //enables esp8266-specific wifi fucntionality
+#include <ESP8266WiFi.h> //enables esp8266-specific wifi functionality
 #include <WiFiClientSecure.h> // Change to WiFiClientSecure
 #include <NTPClient.h> //network transfer protocol
 #include <WiFiUdp.h> //header file to enable udp over wifi
 
-const char* ssid = "iPhone";  //iPhone       
-const char* password = "mt3nqms6q1hx"; //mt3nqms6q1hx
+const char* ssid = "microUAS";  //iPhone       
+const char* password = "masinmicro"; //mt3nqms6q1hx
 
-const char* statusFileUrl = "https://jamesconnects.com/ledstatus.txt"; // URL to ledstatus.txt
+const char* statusFileUrl = "/ledstatus.txt"; // URL to ledstatus.txt (changed to relative URL)
 const int gpioPin = 16; // GPIO pin to control regular LED
 const int gpioRed = 0;       // GPIO 0 for Red LED
 const int gpioBlue = 4; 
 
-WiFiClientSecure client; // creates an instance of the wificlientsecure class, oject is "client"
+WiFiClientSecure client; // creates an instance of the wificlientsecure class, object is "client"
 
 void checkLEDStatus(); // Function declaration
 void checkLEDSliders();
@@ -30,6 +30,7 @@ void setup() { //this block of code initializes wifi connection
 
     // Initial check
     checkLEDStatus();
+    checkLEDSliders(); // Added to check slider values on startup
 }
 
 void loop() {
@@ -37,14 +38,15 @@ void loop() {
     unsigned long currentMillis = millis(); //millis is also included in arduino library. tells #of ms since running the program 
 
     // Check the status every 2 minutes (30000 ms)
-    if (currentMillis - lastCheck >= 30000) {
+    if (currentMillis - lastCheck >= 30000) { // Adjusted to 30 seconds
         lastCheck = currentMillis;
         checkLEDStatus();
+        checkLEDSliders(); // Check sliders every 30 SEC
     }
 }
 
 void checkLEDStatus() {
-   client.setInsecure(); // ignores SSL certificate validation
+    client.setInsecure(); // ignores SSL certificate validation
 
     if (client.connect("jamesconnects.com", 443)) { // domain name
         Serial.println("Requesting LED status..."); //print this to serial monitor
@@ -76,9 +78,6 @@ void checkLEDStatus() {
         Serial.println("Failed to connect to the server");
     }
 }
-
-
-
 
 void checkLEDSliders() {
     client.setInsecure(); // Ignore SSL certificate validation
