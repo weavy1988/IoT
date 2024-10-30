@@ -3,8 +3,8 @@
 #include <NTPClient.h> //network transfer protocol
 #include <WiFiUdp.h> //header file to enable udp over wifi
 
-const char* ssid = "microUAS";  //iPhone       
-const char* password = "masinmicro"; //mt3nqms6q1hx
+const char* ssid = "iPhone";  //iPhone       
+const char* password = "mt3nqms6q1hx"; //mt3nqms6q1hx
 
 const char* statusFileUrl = "/ledstatus.txt"; // URL to ledstatus.txt (changed to relative URL)
 const int gpioPin = 16; // GPIO pin to control regular LED
