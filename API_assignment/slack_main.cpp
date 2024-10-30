@@ -8,6 +8,8 @@
 #define DHTTYPE DHT11   
 #define BUTTON_PIN 9   
 
+WiFiClientSecure client;
+
 DHT myDHT(DHTPIN, DHTTYPE);
 
 const char* ssid = "iPhone";         
@@ -22,15 +24,15 @@ void setup() {
     
     pinMode(BUTTON_PIN, INPUT);
 
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(ssid, password); //wifi.begin is a function declared in the esp8266wifi header file.
+    while (WiFi.status() != WL_CONNECTED) { //while not connected to wifi, display ".........."
         delay(500);
         Serial.print(".");
     }
     Serial.println("Connected to Wi-Fi");
 }
 void sendDataToIFTTT(float temperature, float humidity) {
-    WiFiClientSecure client;
+    
     client.setInsecure();
 
     if (client.connect(iftttHost, 443)) {
