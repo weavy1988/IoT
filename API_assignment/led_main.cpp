@@ -3,8 +3,8 @@
 #include <NTPClient.h> //network transfer protocol
 #include <WiFiUdp.h> //header file to enable udp over wifi
 
-const char* ssid = "iPhone";  //iPhone       
-const char* password = "mt3nqms6q1hx"; //mt3nqms6q1hx
+const char* ssid = "iPhone (4)"; // SSID of the Wi-Fi network
+const char* password = "p27v4kxs9abqn"; // Password for the Wi-Fi network
 
 const char* statusFileUrl = "/ledstatus.txt"; // URL to ledstatus.txt (changed to relative URL)
 const int gpioPin = 16; // GPIO pin to control regular LED
@@ -87,18 +87,17 @@ void checkLEDSliders() {
                      "Host: jamesconnects.com\r\n" +
                      "Connection: close\r\n\r\n"); // Send HTTP GET request
 
-        int redValue = 0;    // Default to 0 if slider values not found
+        int redValue = 0;   // Default to 0 if slider values not found
         int blueValue = 0;
 
         while (client.connected() || client.available()) { // Wait for server response
             if (client.available()) {
                 String line = client.readStringUntil('\n'); // Read line by line
-
                 // Check for slider values in the response
-                if (line.startsWith("Slider 1 RED:")) {
-                    redValue = line.substring(13).toInt();   // Parse Red LED slider value after "Slider 1 RED:"
-                } else if (line.startsWith("Slider 2 BLUE:")) {
-                    blueValue = line.substring(14).toInt();  // Parse Blue LED slider value after "Slider 2 BLUE:"
+                if (line.startsWith("Slider 1 Value:")) {
+                    redValue = line.substring(16).toInt();   // Parse Red LED slider value after "Slider 1 RED:"
+                } else if (line.startsWith("Slider 2 Value:")) {
+                    blueValue = line.substring(16).toInt();  // Parse Blue LED slider value after "Slider 2 BLUE:"
                 }
             }
         }
