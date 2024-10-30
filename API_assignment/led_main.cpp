@@ -3,15 +3,18 @@
 #include <NTPClient.h> //network transfer protocol
 #include <WiFiUdp.h> //header file to enable udp over wifi
 
-const char* ssid = "NETGEAR54";         
-const char* password = "largeskates598"; 
+const char* ssid = "iPhone";  //iPhone       
+const char* password = "mt3nqms6q1hx"; //mt3nqms6q1hx
 
 const char* statusFileUrl = "https://jamesconnects.com/ledstatus.txt"; // URL to ledstatus.txt
-const int gpioPin = 16; // GPIO pin to control LED
+const int gpioPin = 16; // GPIO pin to control regular LED
+const int gpioRed = 0;       // GPIO 0 for Red LED
+const int gpioBlue = 4; 
 
 WiFiClientSecure client; // creates an instance of the wificlientsecure class, oject is "client"
 
 void checkLEDStatus(); // Function declaration
+void checkLEDSliders();
 
 void setup() { //this block of code initializes wifi connection 
     Serial.begin(9600); //serial is an object of the hardwareSerial class, included in arduino library. this sets baud rate 
@@ -33,8 +36,8 @@ void loop() {
     static unsigned long lastCheck = 0; //32-bit unsigned integer, retains its value between function calls. initializes to 0
     unsigned long currentMillis = millis(); //millis is also included in arduino library. tells #of ms since running the program 
 
-    // Check the status every 2 minutes (120000 ms)
-    if (currentMillis - lastCheck >= 120000) {
+    // Check the status every 2 minutes (30000 ms)
+    if (currentMillis - lastCheck >= 30000) {
         lastCheck = currentMillis;
         checkLEDStatus();
     }
@@ -71,5 +74,47 @@ void checkLEDStatus() {
         client.stop(); // Disconnect
     } else {
         Serial.println("Failed to connect to the server");
+    }
+}
+
+
+
+
+void checkLEDSliders() {
+    client.setInsecure(); // Ignore SSL certificate validation
+    if (client.connect("jamesconnects.com", 443)) { // Connect to server on port 443 for HTTPS
+        Serial.println("Requesting slider values..."); // Print status to serial monitor
+        client.print(String("GET ") + statusFileUrl + " HTTP/1.1\r\n" +
+                     "Host: jamesconnects.com\r\n" +
+                     "Connection: close\r\n\r\n"); // Send HTTP GET request
+
+        int redValue = 0;    // Default to 0 if slider values not found
+        int blueValue = 0;
+
+        while (client.connected() || client.available()) { // Wait for server response
+            if (client.available()) {
+                String line = client.readStringUntil('\n'); // Read line by line
+
+                // Check for slider values in the response
+                if (line.startsWith("Slider 1 RED:")) {
+                    redValue = line.substring(13).toInt();   // Parse Red LED slider value after "Slider 1 RED:"
+                } else if (line.startsWith("Slider 2 BLUE:")) {
+                    blueValue = line.substring(14).toInt();  // Parse Blue LED slider value after "Slider 2 BLUE:"
+                }
+            }
+        }
+
+        // Apply parsed values to Red and Blue LEDs using PWM
+        analogWrite(gpioRed, redValue);      // Set PWM for Red LED
+        analogWrite(gpioBlue, blueValue);    // Set PWM for Blue LED
+
+        Serial.print("Red LED set to PWM: ");
+        Serial.println(redValue);
+        Serial.print("Blue LED set to PWM: ");
+        Serial.println(blueValue);
+
+        client.stop(); // Disconnect from server
+    } else {
+        Serial.println("Failed to connect to the server for slider values");
     }
 }
