@@ -1,0 +1,117 @@
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+
+// Wi-Fi credentials
+const char* ssid = "iPhone (2)";       // Enter your WiFi name
+const char* password = "ROSEr0se"; // Enter WiFi password
+
+// MQTT settings
+const char* mqtt_server = "c025f956e4b54f97bf7f0e9b50d0343a.s1.eu.hivemq.cloud";
+const char* mqtt_user = "weavy88";       // HiveMQ username
+const char* mqtt_password = "zulu6Arclite51";   // HiveMQ password
+const char* publishTopic = "testtopic/voltage/outTopic";   // Publish topic
+const char* publishTopic_LED = "testtopic/LED/outTopic"; // Subscribe topic
+const char* subscribeTopic = "testtopic/LED/outTopic";  // inTopic where ESP has subscribed to
+#define publishTimeInterval 10000 // Publish interval in ms
+
+// Pin definitions
+const int inputPin = 13;  // GPIO13 (input)
+const int outputPin = 14; // GPIO14 (output)
+unsigned long lastMsg = 0;
+#define MSG_BUFFER_SIZE 50
+char msg[MSG_BUFFER_SIZE];
+int value = 0;
+
+// Wi-Fi and MQTT clients
+WiFiClientSecure espClient; // Secure client for TLS
+PubSubClient client(espClient);
+
+void setup_wifi() {
+    delay(10);
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println("\nWiFi connected");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+}
+
+void callback(char* topic, byte* payload, int length) {
+    // Handle incoming MQTT messages
+    String receivedMessage = "";
+    for (int i = 0; i < length; i++) {
+        receivedMessage += (char)payload[i];
+    }
+
+    Serial.print("Received message: ");
+    Serial.println(receivedMessage);
+
+    if (receivedMessage == "1") {
+        digitalWrite(outputPin, HIGH);
+    } else if (receivedMessage == "0") {
+        digitalWrite(outputPin, LOW);
+    }
+}
+
+void reconnect() {
+    while (!client.connected()) {
+        Serial.print("Attempting MQTT connection...");
+        String clientId = "ESP8266Client-";
+        clientId += String(random(0xffff), HEX);
+
+        // Attempt to connect
+        if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+            Serial.println("connected");
+            client.subscribe(subscribeTopic);
+        } else {
+            Serial.print("failed, rc=");
+            Serial.print(client.state());
+            Serial.println(" trying again in 5 seconds");
+            delay(5000);
+        }
+    }
+}
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(inputPin, INPUT_PULLUP); // Use internal pull-up resistor for input pin
+    pinMode(outputPin, OUTPUT);
+    digitalWrite(outputPin, LOW);
+
+    setup_wifi();
+    espClient.setInsecure(); // Bypass certificate validation (for testing)
+    client.setServer(mqtt_server, 8883);
+    client.setCallback(callback);
+}
+
+void loop() {
+    if (!client.connected()) {
+        reconnect();
+    }
+    client.loop();
+
+    unsigned long now = millis();
+    if (now - lastMsg > publishTimeInterval) {
+        lastMsg = now;
+
+        int adcValue = analogRead(A0); // Read ADC value
+        float voltage = adcValue * (3.3 / 1023.0); // Convert ADC value to voltage (0-3.3V range)
+
+        snprintf(msg, MSG_BUFFER_SIZE, "Voltage: %.3f V", voltage); // Format voltage
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+
+        client.publish(publishTopic, msg); // Publish message
+    }
+}
